@@ -9,6 +9,12 @@
 
 namespace util {
 
+ScreenSize GetScreenSize() {
+    int screen_width = GetSystemMetrics(SM_CXSCREEN);
+    int screen_height = GetSystemMetrics(SM_CYSCREEN);
+    return {screen_width, screen_height};
+}
+
 // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mouse_event
 void SendMouseEvent(uint32_t ev, int x, int y, uint32_t data) {
     int screen_width = GetSystemMetrics(SM_CXSCREEN);

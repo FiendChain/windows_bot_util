@@ -9,6 +9,13 @@ enum MouseButton {
     LEFT, MIDDLE, RIGHT
 };
 
+struct ScreenSize {
+    int width;
+    int height;
+};
+
+ScreenSize GetScreenSize();
+
 // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-mouse_event
 // refer to this to set events more finely (ie. dragging the mouse etc)
 void SendMouseEvent(uint32_t ev, int x, int y, uint32_t data=0);

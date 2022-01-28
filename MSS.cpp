@@ -57,7 +57,7 @@ bool MSS::Grab(int top, int left) {
         0, 0,
         m_width, m_height,
         m_src_hdc,
-        top, left,
+        left, top,
         SRCCOPY | CAPTUREBLT);
     return status;
 }

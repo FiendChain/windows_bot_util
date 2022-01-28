@@ -14,6 +14,7 @@ MSS::MSS()
     m_max_width = 0;
     m_max_height = 0;
 
+    m_waiting_write = false;
     SetSize(100, 100);
 }
 
@@ -27,6 +28,8 @@ void MSS::SetSize(int width, int height) {
 
     // TODO: free bmp if it exists
     // we have a single infrequent writer
+    auto waiting_write_lock = std::unique_lock(m_waiting_write_mutex);
+    m_waiting_write = true;
     auto lock = std::unique_lock(m_buffer_mutex);
 
     BITMAPINFO bmi;
@@ -47,9 +50,20 @@ void MSS::SetSize(int width, int height) {
     m_max_height = height;
     m_width = width;
     m_height = height;
+
+    m_waiting_write = false;
+    waiting_write_lock.unlock();
+    m_reader_cv.notify_all();
 }
 
 bool MSS::Grab(int top, int left) {
+    {
+        auto waiting_write_lock = std::unique_lock(m_waiting_write_mutex);
+        m_reader_cv.wait(waiting_write_lock, [this]() {
+            return !m_waiting_write;
+        });
+    }
+
     auto lock = std::shared_lock(m_buffer_mutex);
 
     bool status = BitBlt(
@@ -63,6 +77,13 @@ bool MSS::Grab(int top, int left) {
 }
 
 MSSBitmap MSS::GetBitmap() {
+    {
+        auto waiting_write_lock = std::unique_lock(m_waiting_write_mutex);
+        m_reader_cv.wait(waiting_write_lock, [this]() {
+            return !m_waiting_write;
+        });
+    }
+
     auto bitmap = MSSBitmap(m_buffer_mutex, m_channels);
     DIBSECTION sec;
     int status = GetObject(m_hbmp, sizeof(sec), (LPVOID)(&sec));

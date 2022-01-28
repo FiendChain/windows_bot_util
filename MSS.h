@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <shared_mutex>
+#include <condition_variable>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -55,6 +56,9 @@ private:
     const int m_channels;
 
     std::shared_mutex m_buffer_mutex;
+    std::mutex m_waiting_write_mutex;
+    bool m_waiting_write;
+    std::condition_variable m_reader_cv;
 public:
     MSS();
     void SetSize(int width, int height);

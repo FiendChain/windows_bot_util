@@ -1,5 +1,6 @@
 #include "mss.h"
 
+#include <algorithm>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -32,6 +33,10 @@ void MSS::SetSize(int width, int height) {
     m_waiting_write = true;
     auto lock = std::unique_lock(m_buffer_mutex);
 
+    // every time we resize, we double the buffer in both dimensions
+    const int new_width  = std::max(width, m_max_width*2);
+    const int new_height = std::max(height, m_max_height*2);
+
     BITMAPINFO bmi;
     auto &header = bmi.bmiHeader;
     header.biSize = sizeof(BITMAPINFOHEADER);
@@ -40,14 +45,14 @@ void MSS::SetSize(int width, int height) {
     header.biCompression = 0;
     header.biClrUsed = 0;
     header.biClrImportant = 0;
-    header.biWidth = width;
-    header.biHeight = height;
+    header.biWidth = new_width;
+    header.biHeight = new_height;
 
     void *bmp_bits;
     m_hbmp = CreateDIBSection(m_src_hdc, &bmi, DIB_RGB_COLORS, &bmp_bits, NULL, 0);
     SelectObject(m_dst_hdc, m_hbmp);
-    m_max_width = width;
-    m_max_height = height;
+    m_max_width = new_width;
+    m_max_height = new_height;
     m_width = width;
     m_height = height;
 
